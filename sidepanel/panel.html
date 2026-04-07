@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Agent</title>
+  <link rel="stylesheet" href="panel.css">
+</head>
+<body>
+  <div class="panel">
+    <header class="header">
+      <nav class="tabs" role="tablist">
+        <button type="button" class="tab active" data-view="chat" role="tab" aria-selected="true">Chat</button>
+        <button type="button" class="tab" data-view="memory" role="tab" aria-selected="false">Memory</button>
+        <button type="button" class="tab" data-view="personality" role="tab" aria-selected="false">Personality</button>
+        <button type="button" class="tab" data-view="waiting" role="tab" aria-selected="false">Waiting</button>
+        <button type="button" class="tab" data-view="dev" role="tab" aria-selected="false">Dev</button>
+        <button type="button" class="tab" data-view="settings" role="tab" aria-selected="false">Settings</button>
+      </nav>
+    </header>
+
+    <section class="view view-chat" id="viewChat">
+      <div class="page-summary" id="pageSummary">
+        <div class="page-summary-header">
+          <span class="page-summary-title">Current page</span>
+          <button type="button" class="btn btn-ghost btn-sm" id="refreshSummaryBtn" title="Refresh">↻</button>
+        </div>
+        <div class="page-summary-content" id="pageSummaryContent">
+          <p class="page-summary-placeholder">Load summary from the tab below.</p>
+        </div>
+      </div>
+      <div class="action-buttons" id="actionButtons">
+        <button type="button" class="action-btn" data-prompt="Summarize this page in 2–3 sentences.">Summarize</button>
+        <button type="button" class="action-btn" data-prompt="What are the main actions or links I can take on this page?">Main actions</button>
+        <button type="button" class="action-btn" data-prompt="Fill the first form on this page with placeholder values.">Fill form</button>
+        <button type="button" class="action-btn" data-prompt="Scroll down to show more content.">Scroll down</button>
+      </div>
+      <main class="messages" id="messages" role="log" aria-live="polite">
+        <div class="welcome" id="welcome">
+          <p>Describe a task. The agent will return actions (click, type, scroll) and run them on the current tab.</p>
+        </div>
+      </main>
+
+      <div class="screenshot-option" id="screenshotOption">
+        <label class="screenshot-toggle-label">
+          <input type="checkbox" id="includeScreenshotCheckbox" class="screenshot-checkbox" aria-label="Include screenshot with message" />
+          <span class="screenshot-toggle-text">Include screenshot</span>
+        </label>
+        <span class="screenshot-sent-status" id="screenshotSentStatus" aria-live="polite"></span>
+      </div>
+      <form class="input-area" id="chatForm">
+      <div class="input-wrapper">
+        <textarea
+          id="input"
+          class="input"
+          placeholder="Message the agent…"
+          rows="1"
+          autocomplete="off"
+          aria-label="Message"
+       ></textarea>
+        <button type="submit" class="send" id="sendBtn" aria-label="Send">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+          </svg>
+        </button>
+        <button type="button" class="stop-btn hidden" id="stopBtn" aria-label="Stop">Stop</button>
+      </div>
+    </form>
+    </section>
+
+    <section class="view view-memory hidden" id="viewMemory">
+      <div class="memory-content">
+        <h2 class="memory-title">Memory</h2>
+        <p class="memory-desc">Saved context (markdown). The agent can read this and add to it via <code>saveToMemory</code> in its response. Edit and save manually below.</p>
+        <textarea id="memoryContent" class="memory-textarea" placeholder="# Memory&#10;&#10;User preferences, important info…" rows="12"></textarea>
+        <div class="memory-actions">
+          <button type="button" class="btn btn-primary" id="memorySaveBtn">Save</button>
+          <span class="memory-status" id="memoryStatus"></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="view view-personality hidden" id="viewPersonality">
+      <div class="personality-content">
+        <h2 class="personality-title">Agent personality & values</h2>
+        <p class="personality-desc">Define how the agent should behave: tone, values, priorities. This is prepended to the system prompt so the model follows it (e.g. concise, formal, helpful, privacy-focused).</p>
+        <textarea id="personalityContent" class="personality-textarea" placeholder="e.g. Be concise and direct. Prefer accessibility. Never submit forms without explicit user intent. Respect privacy." rows="10"></textarea>
+        <div class="personality-actions">
+          <button type="button" class="btn btn-primary" id="personalitySaveBtn">Save</button>
+          <span class="personality-status" id="personalityStatus"></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="view view-waiting hidden" id="viewWaiting">
+      <div class="waiting-content">
+        <h2 class="waiting-title">Scheduled tasks</h2>
+        <p class="waiting-desc">Tasks created from Chat (e.g. “refresh every 10 min”, “tomorrow check price”). Shown with when they will run.</p>
+        <ul class="waiting-list" id="waitingList"></ul>
+      </div>
+    </section>
+
+    <section class="view view-dev hidden" id="viewDev">
+      <div class="dev-content">
+        <h2 class="dev-title">What we send to the API</h2>
+        <p class="dev-desc">Full request from the last message (model, system prompt, user message, screenshot if any).</p>
+        <div class="dev-section">
+          <span class="dev-label">Model</span>
+          <span id="devModel" class="dev-value">—</span>
+        </div>
+        <div class="dev-section">
+          <span class="dev-label">System prompt</span>
+          <pre class="dev-pre" id="devSystemPrompt">—</pre>
+        </div>
+        <div class="dev-section">
+          <span class="dev-label">User message</span>
+          <pre class="dev-pre dev-markdown" id="devMarkdown">—</pre>
+        </div>
+        <div class="dev-screenshot-wrap hidden" id="devScreenshotWrap">
+          <span class="dev-label">Screenshot sent</span>
+          <img id="devScreenshot" class="dev-screenshot" alt="Screenshot sent to API" />
+        </div>
+        <div class="dev-actions">
+          <button type="button" class="btn btn-secondary" id="devXrayBtn" title="Outline on the page all elements sent to the API (clickables + main content)">X-ray</button>
+        </div>
+        <div class="dev-section dev-elements-json hidden" id="devElementsJsonWrap">
+          <span class="dev-label">Elements JSON (clickable + readable)</span>
+          <pre class="dev-pre dev-elements-json-pre" id="devElementsJson">—</pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="view view-settings hidden" id="viewSettings">
+      <div class="settings-content">
+        <h2 class="settings-title">API</h2>
+        <p class="settings-desc">Choose a provider and add your API key. Stored locally.</p>
+        <form id="settingsForm">
+          <label class="settings-label" for="apiProvider">Provider</label>
+          <select id="apiProvider" class="settings-input">
+            <option value="openai">OpenAI (ChatGPT)</option>
+            <option value="deepseek">DeepSeek</option>
+            <option value="openrouter">OpenRouter</option>
+          </select>
+          <label class="settings-label" for="apiKey">API key</label>
+          <input type="password" id="apiKey" class="settings-input" placeholder="sk-…" autocomplete="off" />
+          <div id="openrouterModelRow" class="hidden">
+            <label class="settings-label" for="openrouterModel">Model</label>
+            <div class="openrouter-model-wrap">
+              <select id="openrouterModel" class="settings-input"><option value="">— fetch models —</option></select>
+              <button type="button" class="btn btn-secondary" id="fetchModelsBtn">Fetch</button>
+            </div>
+            <span class="openrouter-model-status" id="fetchModelsStatus"></span>
+          </div>
+          <label class="settings-label" for="hfToken">Hugging Face token (optional, for screenshot caption)</label>
+          <input type="password" id="hfToken" class="settings-input" placeholder="hf_…" autocomplete="off" />
+          <div class="settings-actions">
+            <button type="submit" class="btn btn-primary" id="saveSettingsBtn">Save</button>
+            <span class="settings-status" id="settingsStatus"></span>
+          </div>
+        </form>
+      </div>
+    </section>
+  </div>
+  <script src="panel.js"></script>
+</body>
+</html>

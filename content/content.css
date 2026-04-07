@@ -1,0 +1,58 @@
+.reading-time-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #5f6368;
+  background: #f1f3f4;
+  border-radius: 6px;
+  line-height: 1.4;
+}
+
+.reading-time-badge::before {
+  margin-right: 4px;
+}
+
+/* Virtual cursor: moves to click target before the agent clicks */
+.virtual-cursor {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
+  z-index: 2147483647;
+  transition: left 0.35s cubic-bezier(0.25, 0.1, 0.25, 1),
+              top 0.35s cubic-bezier(0.25, 0.1, 0.25, 1);
+  will-change: left, top;
+}
+
+.virtual-cursor.is-clicking {
+  transform: scale(0.85);
+  transition: transform 0.08s ease-out;
+}
+
+.virtual-cursor.is-clicking.done {
+  transform: scale(1);
+  transition: transform 0.12s ease-out;
+}
+
+/* X-ray: 1px green for clickable, 1px yellow for readable */
+.agent-xray-clickable {
+  outline: 1px solid #22c55e !important;
+  outline-offset: 1px !important;
+  box-sizing: border-box !important;
+}
+
+.agent-xray-readable {
+  outline: 1px solid #eab308 !important;
+  outline-offset: 1px !important;
+  box-sizing: border-box !important;
+}
+
+.agent-xray-content {
+  outline: 1px solid #ca8a04 !important;
+  outline-offset: 1px !important;
+  box-sizing: border-box !important;
+}

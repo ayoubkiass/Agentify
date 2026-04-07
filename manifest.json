@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Agent",
+  "version": "1.0",
+  "description": "Chat with an agent in a Cursor-like side panel",
+  "permissions": ["sidePanel", "storage", "tabs", "scripting", "alarms", "notifications"],
+  "action": {
+    "default_title": "Open Agent"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "side_panel": {
+    "default_path": "sidepanel/panel.html"
+  },
+  "host_permissions":["https://api.openai.com/*","https://api.deepseek.com/*","https://api-inference.huggingface.co/*","<all_urls>"],
+"content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["lib/turndown.js", "content/content.js"],
+      "css": ["content/content.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}
